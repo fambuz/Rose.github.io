@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For You &lt;3</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1a0514;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="flowerCanvas" width="600" height="700"></canvas>
+
+  <script>
+    const canvas = document.getElementById("flowerCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const WORD = "my love";
+
+    // Shift coordinates so (0, 0) is centered nicely
+    ctx.translate(canvas.width / 2, canvas.height / 2 - 30);
+
+    // Helper function to draw text petals composed of words
+    function drawPetal(baseX, baseY, baseAngleRad, length, width, color, points = 26) {
+      ctx.fillStyle = color;
+      ctx.font = "bold 8px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const cosA = Math.cos(baseAngleRad);
+      const sinA = Math.sin(baseAngleRad);
+
+      for (let i = 0; i <= points; i++) {
+        const theta = (i * Math.PI) / points;
+        const out = length * Math.sin(theta);
+        const side = width * Math.sin(theta) * Math.cos(theta);
+
+        const rx = out * cosA - side * sinA;
+        const ry = out * sinA + side * cosA;
+
+        // Invert Y because HTML canvas Y increases downwards
+        ctx.fillText(WORD, baseX + rx, -(baseY + ry));
+      }
+    }
+
+    function drawLeaf(baseX, baseY, angleDeg, length, width) {
+      drawPetal(baseX, baseY, (angleDeg * Math.PI) / 180, length, width, "#2e8b57", 22);
+    }
+
+    // --- 1. Draw Stem and Leaves ---
+    ctx.strokeStyle = "#2e8b57";
+    ctx.lineWidth = 4;
+
+    // Draw curved stem using a quadratic curve
+    ctx.beginPath();
+    ctx.moveTo(0, 30);
+    ctx.quadraticCurveTo(30, 150, -40, 250);
+    ctx.stroke();
+
+    // Leaf positions corresponding to points along the stem
+    drawLeaf(12, 100, 160, 50, 25);
+    drawLeaf(-15, 175, 20, 55, 28);
+
+    // --- 2. Draw Flower Rings ---
+    const rings = [
+      { radius: 0,  count: 4,  length: 40,  width: 15, color: "#ffe6f2", offset: 45 },
+      { radius: 10, count: 5,  length: 50,  width: 25, color: "#ffb3d9", offset: 0  },
+      { radius: 20, count: 7,  length: 70,  width: 35, color: "#ff66b2", offset: 30 },
+      { radius: 30, count: 9,  length: 90,  width: 45, color: "#ff1493", offset: 15 },
+      { radius: 40, count: 12, length: 110, width: 55, color: "#c71585", offset: 0  }
+    ];
+
+    rings.forEach(ring => {
+      for (let i = 0; i < ring.count; i++) {
+        const angleDeg = (360 / ring.count) * i + ring.offset;
+        const angleRad = (angleDeg * Math.PI) / 180;
+
+        const baseX = ring.radius * Math.cos(angleRad);
+        const baseY = ring.radius * Math.sin(angleRad);
+
+        drawPetal(baseX, baseY, angleRad, ring.length, ring.width, ring.color);
+      }
+    });
+
+    // --- 3. Floating Hearts Background ---
+    ctx.fillStyle = "#ff99cc";
+    ctx.font = "bold 10px Courier";
+    ctx.textAlign = "center";
+
+    for (let i = 0; i < 12; i++) {
+      const x = Math.floor(Math.random() * 500) - 250;
+      const y = Math.floor(Math.random() * 500) - 250;
+      if (Math.hypot(x, y) > 130) {
+        ctx.fillText("<3", x, -y);
+      }
+    }
+
+    // --- 4. Subtitle Text ---
+    ctx.fillStyle = "white";
+    ctx.font = "italic 10px Arial";
+    ctx.fillText("Made with love", 0, 300);
+  </script>
+
+</body>
+</html>
