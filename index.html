@@ -77,7 +77,6 @@
     const stemSteps = 50;
     for (let i = 1; i <= stemSteps; i++) {
       const t = i / stemSteps;
-      // Quadratic curve interpolation
       const x = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * 30 + t * t * (-40);
       const y = (1 - t) * (1 - t) * (-30) + 2 * (1 - t) * t * (-150) + t * t * (-250);
       const prevT = (i - 1) / stemSteps;
@@ -155,12 +154,14 @@
       ctx.fillText("Made with love", 0, 300);
     });
 
-    // --- Animation Execution Loop ---
-    const SPEED = 0.5; // Number of elements drawn per frame (Increase for faster, decrease for slower)
+    // --- Animation Speed Calibration ---
+    // Total items in drawQueue is ~1,230.
+    // Drawing 5 items per frame at 60 FPS takes ~4.1 seconds (matching Python Turtle speed(0)).
+    const ITEMS_PER_FRAME = 5;
 
     function animate() {
       if (drawQueue.length > 0) {
-        for (let i = 0; i < SPEED && drawQueue.length > 0; i++) {
+        for (let i = 0; i < ITEMS_PER_FRAME && drawQueue.length > 0; i++) {
           const step = drawQueue.shift();
           step();
         }
@@ -168,7 +169,7 @@
       }
     }
 
-    // Start the drawing animation
+    // Start the animation
     animate();
   </script>
 
