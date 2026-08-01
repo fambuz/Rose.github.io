@@ -31,18 +31,31 @@
 
     const WORD = "my love";
 
-    // Shift coordinates so (0, 0) is centered nicely
-    ctx.translate(canvas.width / 2, canvas.height / 2 - 30);
+    // Shift coordinates so (0,0) is centered nicely
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2 - 30;
 
-    // Helper function to draw text petals composed of words
-    function drawPetal(baseX, baseY, baseAngleRad, length, width, color, points = 26) {
+    // Helper to clear and re-prepare transform matrix
+    function resetTransform() {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.translate(centerX, centerY);
+    }
+
+    // Single word draw function
+    function drawWord(x, y, color, font = "bold 8px Arial") {
+      resetTransform();
       ctx.fillStyle = color;
-      ctx.font = "bold 8px Arial";
+      ctx.font = font;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      ctx.fillText(WORD, x, -y);
+    }
 
+    // Helper to calculate petal word positions
+    function getPetalPoints(baseX, baseY, baseAngleRad, length, width, points = 26) {
       const cosA = Math.cos(baseAngleRad);
       const sinA = Math.sin(baseAngleRad);
+      const list = [];
 
       for (let i = 0; i <= points; i++) {
         const theta = (i * Math.PI) / points;
@@ -52,30 +65,49 @@
         const rx = out * cosA - side * sinA;
         const ry = out * sinA + side * cosA;
 
-        // Invert Y because HTML canvas Y increases downwards
-        ctx.fillText(WORD, baseX + rx, -(baseY + ry));
+        list.push({ x: baseX + rx, y: baseY + ry });
       }
+      return list;
     }
 
-    function drawLeaf(baseX, baseY, angleDeg, length, width) {
-      drawPetal(baseX, baseY, (angleDeg * Math.PI) / 180, length, width, "#2e8b57", 22);
+    // --- Build Action Queue to replicate Turtle step-by-step drawing ---
+    const drawQueue = [];
+
+    // 1. Stem Drawing Steps
+    const stemSteps = 50;
+    for (let i = 1; i <= stemSteps; i++) {
+      const t = i / stemSteps;
+      // Quadratic curve interpolation
+      const x = (1 - t) * (1 - t) * 0 + 2 * (1 - t) * t * 30 + t * t * (-40);
+      const y = (1 - t) * (1 - t) * (-30) + 2 * (1 - t) * t * (-150) + t * t * (-250);
+      const prevT = (i - 1) / stemSteps;
+      const prevX = (1 - prevT) * (1 - prevT) * 0 + 2 * (1 - prevT) * prevT * 30 + prevT * prevT * (-40);
+      const prevY = (1 - prevT) * (1 - prevT) * (-30) + 2 * (1 - prevT) * prevT * (-150) + prevT * prevT * (-250);
+
+      drawQueue.push(() => {
+        resetTransform();
+        ctx.strokeStyle = "#2e8b57";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(prevX, -prevY);
+        ctx.lineTo(x, -y);
+        ctx.stroke();
+      });
     }
 
-    // --- 1. Draw Stem and Leaves ---
-    ctx.strokeStyle = "#2e8b57";
-    ctx.lineWidth = 4;
+    // Helper to queue leaf words
+    function queueLeaf(baseX, baseY, angleDeg, length, width) {
+      const pts = getPetalPoints(baseX, baseY, (angleDeg * Math.PI) / 180, length, width, 22);
+      pts.forEach(pt => {
+        drawQueue.push(() => drawWord(pt.x, pt.y, "#2e8b57"));
+      });
+    }
 
-    // Draw curved stem using a quadratic curve
-    ctx.beginPath();
-    ctx.moveTo(0, 30);
-    ctx.quadraticCurveTo(30, 150, -40, 250);
-    ctx.stroke();
+    // Add leaves mid-stem
+    queueLeaf(12, -100, 160, 50, 25);
+    queueLeaf(-15, -175, 20, 55, 28);
 
-    // Leaf positions corresponding to points along the stem
-    drawLeaf(12, 100, 160, 50, 25);
-    drawLeaf(-15, 175, 20, 55, 28);
-
-    // --- 2. Draw Flower Rings ---
+    // 2. Petal Rings
     const rings = [
       { radius: 0,  count: 4,  length: 40,  width: 15, color: "#ffe6f2", offset: 45 },
       { radius: 10, count: 5,  length: 50,  width: 25, color: "#ffb3d9", offset: 0  },
@@ -92,27 +124,52 @@
         const baseX = ring.radius * Math.cos(angleRad);
         const baseY = ring.radius * Math.sin(angleRad);
 
-        drawPetal(baseX, baseY, angleRad, ring.length, ring.width, ring.color);
+        const pts = getPetalPoints(baseX, baseY, angleRad, ring.length, ring.width);
+        pts.forEach(pt => {
+          drawQueue.push(() => drawWord(pt.x, pt.y, ring.color));
+        });
       }
     });
 
-    // --- 3. Floating Hearts Background ---
-    ctx.fillStyle = "#ff99cc";
-    ctx.font = "bold 10px Courier";
-    ctx.textAlign = "center";
-
+    // 3. Floating Hearts Background
     for (let i = 0; i < 12; i++) {
       const x = Math.floor(Math.random() * 500) - 250;
       const y = Math.floor(Math.random() * 500) - 250;
       if (Math.hypot(x, y) > 130) {
-        ctx.fillText("<3", x, -y);
+        drawQueue.push(() => {
+          resetTransform();
+          ctx.fillStyle = "#ff99cc";
+          ctx.font = "bold 10px Courier";
+          ctx.textAlign = "center";
+          ctx.fillText("<3", x, -y);
+        });
       }
     }
 
-    // --- 4. Subtitle Text ---
-    ctx.fillStyle = "white";
-    ctx.font = "italic 10px Arial";
-    ctx.fillText("Made with love", 0, 300);
+    // 4. Final Subtitle
+    drawQueue.push(() => {
+      resetTransform();
+      ctx.fillStyle = "white";
+      ctx.font = "italic 10px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Made with love", 0, 300);
+    });
+
+    // --- Animation Execution Loop ---
+    const SPEED = 4; // Number of elements drawn per frame (Increase for faster, decrease for slower)
+
+    function animate() {
+      if (drawQueue.length > 0) {
+        for (let i = 0; i < SPEED && drawQueue.length > 0; i++) {
+          const step = drawQueue.shift();
+          step();
+        }
+        requestAnimationFrame(animate);
+      }
+    }
+
+    // Start the drawing animation
+    animate();
   </script>
 
 </body>
