@@ -31,7 +31,7 @@
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2 - 30;
 
-  // Batang Bunga
+  // Draw Stem
   ctx.beginPath();
   ctx.strokeStyle = "#2e8b57";
   ctx.lineWidth = 4;
@@ -39,7 +39,7 @@
   ctx.quadraticCurveTo(centerX - 40, centerY + 150, centerX - 20, centerY + 280);
   ctx.stroke();
 
-  // Fungsi Kelopak
+  // Helper to draw filled petals
   function drawPetal(bx, by, angleRad, length, width, color, points = 26) {
     ctx.beginPath();
     ctx.fillStyle = color;
@@ -63,11 +63,11 @@
     ctx.fill();
   }
 
-  // Daun
+  // Draw Leaves
   drawPetal(centerX - 30, centerY + 100, Math.PI * 0.9, 50, 25, "#2e8b57");
   drawPetal(centerX - 15, centerY + 170, Math.PI * 0.1, 55, 28, "#2e8b57");
 
-  // Kelopak Bunga
+  // Rose Rings
   const rings = [
     { radius: 40, count: 12, length: 110, width: 55, color: "#c71585", offset: 0 },
     { radius: 30, count: 9,  length: 90,  width: 45, color: "#ff1493", offset: 15 },
@@ -86,7 +86,7 @@
     }
   });
 
-  // Symbol <3
+  // Floating Hearts
   ctx.fillStyle = "#ff99cc";
   ctx.font = "bold 12px Courier";
   ctx.textAlign = "center";
@@ -99,9 +99,9 @@
     }
   }
 
-  // Tulisan bawah
+  // Text at the bottom
   ctx.fillStyle = "white";
-  ctx.font = "italic 14px Arial";
+  ctx.font = "italic 12px Arial";
   ctx.fillText("my love", centerX, centerY + 320);
 </script>
 
