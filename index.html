@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For You <3</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #1a0514;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      background-color: #1a0514;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="roseCanvas" width="600" height="700"></canvas>
+
+<script>
+  const canvas = document.getElementById("roseCanvas");
+  const ctx = canvas.getContext("2d");
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2 - 30;
+
+  // Draw Stem
+  ctx.beginPath();
+  ctx.strokeStyle = "#2e8b57";
+  ctx.lineWidth = 4;
+  ctx.moveTo(centerX, centerY);
+  ctx.quadraticCurveTo(centerX - 40, centerY + 150, centerX - 20, centerY + 280);
+  ctx.stroke();
+
+  // Helper to draw filled petals
+  function drawPetal(bx, by, angleRad, length, width, color, points = 26) {
+    ctx.beginPath();
+    ctx.fillStyle = color;
+    const cosA = Math.cos(angleRad);
+    const sinA = Math.sin(angleRad);
+
+    for (let i = 0; i <= points; i++) {
+      const theta = (i * Math.PI) / points;
+      const out = length * Math.sin(theta);
+      const side = width * Math.sin(theta) * Math.cos(theta);
+      const rx = out * cosA - side * sinA;
+      const ry = out * sinA + side * cosA;
+
+      if (i === 0) {
+        ctx.moveTo(bx + rx, by + ry);
+      } else {
+        ctx.lineTo(bx + rx, by + ry);
+      }
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Draw Leaves
+  drawPetal(centerX - 30, centerY + 100, Math.PI * 0.9, 50, 25, "#2e8b57");
+  drawPetal(centerX - 15, centerY + 170, Math.PI * 0.1, 55, 28, "#2e8b57");
+
+  // Rose Rings
+  const rings = [
+    { radius: 40, count: 12, length: 110, width: 55, color: "#c71585", offset: 0 },
+    { radius: 30, count: 9,  length: 90,  width: 45, color: "#ff1493", offset: 15 },
+    { radius: 20, count: 7,  length: 70,  width: 35, color: "#ff66b2", offset: 30 },
+    { radius: 10, count: 5,  length: 50,  width: 25, color: "#ffb3d9", offset: 0 },
+    { radius: 0,  count: 4,  length: 40,  width: 15, color: "#ffe6f2", offset: 45 },
+  ];
+
+  rings.forEach(ring => {
+    for (let i = 0; i < ring.count; i++) {
+      const angleDeg = (360 / ring.count) * i + ring.offset;
+      const angleRad = (angleDeg * Math.PI) / 180;
+      const bx = centerX + ring.radius * Math.cos(angleRad);
+      const by = centerY + ring.radius * Math.sin(angleRad);
+      drawPetal(bx, by, angleRad, ring.length, ring.width, ring.color);
+    }
+  });
+
+  // Floating Hearts
+  ctx.fillStyle = "#ff99cc";
+  ctx.font = "bold 12px Courier";
+  ctx.textAlign = "center";
+  for (let i = 0; i < 15; i++) {
+    const x = Math.random() * (canvas.width - 40) + 20;
+    const y = Math.random() * (canvas.height - 40) + 20;
+    const dist = Math.hypot(x - centerX, y - centerY);
+    if (dist > 130) {
+      ctx.fillText("<3", x, y);
+    }
+  }
+
+  // Text at the bottom
+  ctx.fillStyle = "white";
+  ctx.font = "italic 12px Arial";
+  ctx.fillText("my love", centerX, centerY + 320);
+</script>
+
+</body>
+</html>
